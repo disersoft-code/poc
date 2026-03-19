@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"errors"
 	"runtime"
 
 	"codeAct-poc/internal/ai"
@@ -17,13 +18,13 @@ func Build(task string) (model.Plan, error) {
 		return plan, nil
 	}
 
-	plan, err = fallback.GeneratePlan(task, language)
-	if err != nil {
-		return model.Plan{}, err
+	plan, fallbackErr := fallback.GeneratePlan(task, language)
+	if fallbackErr == nil {
+		plan.Source = "fallback"
+		return plan, nil
 	}
 
-	plan.Source = "fallback"
-	return plan, nil
+	return model.Plan{}, errors.New("this command is not supported without AI")
 }
 
 func detectScriptLanguage() string {

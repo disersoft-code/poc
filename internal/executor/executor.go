@@ -37,12 +37,61 @@ func Execute(plan model.Plan) (model.ExecutionResult, error) {
 	}
 
 	if err == nil {
+		if looksLikeScriptError(output) {
+			result.Stderr = output
+			result.ExitCode = 1
+			return result, errors.New("script output indicates an execution error")
+		}
+
 		result.Stdout = output
 		return result, nil
 	}
 
 	result.Stderr = output
 	return result, err
+}
+
+func looksLikeScriptError(output string) bool {
+	lower := strings.ToLower(strings.TrimSpace(output))
+
+	if lower == "" {
+		return false
+	}
+
+	allowedMessages := []string{
+		"file does not exist.",
+		"directory does not exist.",
+		"path does not exist.",
+		"target path does not exist.",
+		"no matches found.",
+		"nothing to replace.",
+		"destination already exists.",
+		"source and destination are the same.",
+	}
+
+	for _, msg := range allowedMessages {
+		if lower == msg {
+			return false
+		}
+	}
+
+	errorMarkers := []string{
+		"categoryinfo",
+		"fullyqualifiederrorid",
+		"parsererror",
+		"exception",
+		"not recognized as the name of a cmdlet",
+		"the term",
+		"at line:",
+	}
+
+	for _, marker := range errorMarkers {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func writeTempScript(language string, script string) (string, error) {
