@@ -210,17 +210,6 @@ This command is not supported without AI.
 
 ---
 
-## Future Improvements
-
-- Safer execution (sandboxing)
-- Better stdout/stderr separation
-- Structured outputs instead of plain text
-- Multi-step planning
-- Support for additional tools (APIs, databases)
-- More robust validation of generated scripts
-
----
-
 ## Summary
 
 This PoC demonstrates:
