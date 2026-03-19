@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"codeAct-poc/internal/model"
@@ -94,6 +95,10 @@ func formatCountResult(plan model.Plan, result model.ExecutionResult) string {
 	output := strings.TrimSpace(result.Stdout)
 	if output == "" {
 		return fmt.Sprintf("No output was produced while counting matches in %s.", plan.Target)
+	}
+
+	if _, err := strconv.Atoi(output); err != nil {
+		return output
 	}
 
 	patternDescription := joinPatterns(plan.Patterns)

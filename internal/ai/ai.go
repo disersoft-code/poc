@@ -217,6 +217,8 @@ Rules:
 - For count_matches, the script must output only the final count.
 - For list_matches and find_text, the script must output one match per line in the format file:line: content.
 - For create_file, delete_path, rename_path, copy_path, and replace_text, print exactly one short final line describing the outcome.
+- For count_matches, output only a numeric count on success.
+- If counting cannot be performed because of a validation outcome, output a short informative message instead of a number.
 `, language, language)
 }
 

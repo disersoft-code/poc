@@ -37,7 +37,7 @@ func Execute(plan model.Plan) (model.ExecutionResult, error) {
 	}
 
 	if err == nil {
-		if looksLikeScriptError(output) {
+		if shouldInspectOutput(plan) && looksLikeScriptError(output) {
 			result.Stderr = output
 			result.ExitCode = 1
 			return result, errors.New("script output indicates an execution error")
@@ -168,4 +168,13 @@ func extractExitCode(err error) int {
 	}
 
 	return 1
+}
+
+func shouldInspectOutput(plan model.Plan) bool {
+	switch plan.Intent {
+	case "create_file", "delete_path", "rename_path", "copy_path", "replace_text":
+		return true
+	default:
+		return false
+	}
 }
