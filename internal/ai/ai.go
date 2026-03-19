@@ -166,7 +166,7 @@ Do not include explanations.
 The JSON schema is:
 {
   "use_case": "log_agent" or "file_agent",
-  "intent": "count_matches" or "list_matches" or "create_file" or "delete_path" or "rename_path" or "copy_path" or "replace_text" or "find_text",
+  "intent": "count_matches" or "list_matches" or "count_files" or "list_files" or "create_file" or "delete_path" or "rename_path" or "copy_path" or "replace_text" or "find_text",
   "language": "%s",
   "target": "path string",
   "destination": "path string",
@@ -182,13 +182,14 @@ Rules:
 - Supported intents:
   - "count_matches"
   - "list_matches"
+  - "count_files"
+  - "list_files"
   - "create_file"
   - "delete_path"
   - "rename_path"
   - "copy_path"
   - "replace_text"
-  - "find_text"
-- The target must come from the user task when applicable.
+  - "find_text"- The target must come from the user task when applicable.
 - The destination must be included for copy and rename operations.
 - The replacement must be included for replace_text.
 - The content must be included for create_file when the user provides content.
@@ -219,6 +220,12 @@ Rules:
 - For create_file, delete_path, rename_path, copy_path, and replace_text, print exactly one short final line describing the outcome.
 - For count_matches, output only a numeric count on success.
 - If counting cannot be performed because of a validation outcome, output a short informative message instead of a number.
+- Use "count_files" when the user asks to count files in a directory without searching file contents.
+- For count_files, the script must output only the final numeric file count on success.
+- If the directory does not exist for count_files or list_files, return a short informative message and exit successfully.
+- Use "list_files" when the user asks to list files in a directory without searching file contents.
+- For list_files, output one file path per line.
+- For rename_path in PowerShell, prefer using Move-Item with -Destination instead of Rename-Item.
 `, language, language)
 }
 
@@ -238,7 +245,7 @@ Do not include explanations.
 The JSON schema is:
 {
   "use_case": "log_agent" or "file_agent",
-  "intent": "count_matches" or "list_matches" or "create_file" or "delete_path" or "rename_path" or "copy_path" or "replace_text" or "find_text",
+  "intent": "count_matches" or "list_matches" or "count_files" or "list_files" or "create_file" or "delete_path" or "rename_path" or "copy_path" or "replace_text" or "find_text",
   "language": "%s",
   "target": "path string",
   "destination": "path string",
@@ -268,6 +275,9 @@ Rules:
 - Do not print intermediate command output, tables, objects, or diagnostic information unless the task explicitly asks for it.
 - For create_file, delete_path, rename_path, copy_path, and replace_text, print exactly one short final line describing the outcome.
 - Do not print both an informative validation message and a success message for the same operation.
+- Keep "count_files" for directory file counting tasks that do not require content search.
+- Keep "list_files" for directory file listing tasks that do not require content search.
+- For list_files, the corrected script must output one file path per line.
 `, language, language)
 }
 
@@ -338,7 +348,7 @@ func validatePlan(plan model.Plan, expectedLanguage string) error {
 	}
 
 	switch plan.Intent {
-	case "count_matches", "list_matches", "create_file", "delete_path", "rename_path", "copy_path", "replace_text", "find_text":
+	case "count_matches", "list_matches", "count_files", "list_files", "create_file", "delete_path", "rename_path", "copy_path", "replace_text", "find_text":
 	default:
 		return errors.New("invalid plan intent")
 	}
@@ -358,6 +368,11 @@ func validatePlan(plan model.Plan, expectedLanguage string) error {
 		}
 		if len(plan.Patterns) == 0 {
 			return errors.New("invalid plan patterns")
+		}
+
+	case "count_files", "list_files":
+		if strings.TrimSpace(plan.Target) == "" {
+			return errors.New("invalid plan target")
 		}
 
 	case "create_file":

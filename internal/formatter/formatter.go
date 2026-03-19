@@ -24,6 +24,10 @@ func Format(plan model.Plan, result model.ExecutionResult) string {
 		return formatSimpleOperationResult(result, "The path was copied successfully.")
 	case "replace_text":
 		return formatSimpleOperationResult(result, "The text was replaced successfully.")
+	case "count_files":
+		return formatCountFilesResult(plan, result)
+	case "list_files":
+		return formatListFilesResult(plan, result)
 	default:
 		return formatDefaultResult(result)
 	}
@@ -163,4 +167,30 @@ func joinPatterns(patterns []string) string {
 	default:
 		return strings.Join(patterns[:len(patterns)-1], ", ") + ", and " + patterns[len(patterns)-1]
 	}
+}
+
+func formatCountFilesResult(plan model.Plan, result model.ExecutionResult) string {
+	output := strings.TrimSpace(result.Stdout)
+	if output == "" {
+		return fmt.Sprintf("No output was produced while counting files in %s.", plan.Target)
+	}
+
+	if _, err := strconv.Atoi(output); err != nil {
+		return output
+	}
+
+	return fmt.Sprintf(
+		"The number of files found in %s is %s.",
+		plan.Target,
+		output,
+	)
+}
+
+func formatListFilesResult(plan model.Plan, result model.ExecutionResult) string {
+	output := strings.TrimSpace(result.Stdout)
+	if output == "" {
+		return fmt.Sprintf("No files were found in %s.", plan.Target)
+	}
+
+	return fmt.Sprintf("Files found in %s:\n%s", plan.Target, output)
 }

@@ -34,12 +34,17 @@ This enables:
 - Supports:
   - Log analysis (`log_agent`)
   - File system operations (`file_agent`)
+- File system capabilities:
+  - Count files in a directory
+  - List files in a directory
+  - Create, delete, rename, copy files
+  - Search and replace text
 - Dynamic script generation using AI
 - Automatic OS detection:
   - Windows → PowerShell
   - Linux/macOS → Bash
 - Retry mechanism using execution feedback
-- Fallback mode when AI is unavailable
+- Fallback mode when AI is unavailable (limited to log queries)
 - Debug mode (`--debug`)
 - Dry-run mode (`--dry-run`)
 
@@ -126,6 +131,14 @@ go run . --task "list errors in ./logs"
 ```
 
 ### File operations (AI required)
+
+```bash
+go run . --task "count how many files are in ./output"
+```
+
+```bash
+go run . --task "list files are in ./output"
+```
 
 ```bash
 go run . --task "create a file named notes.txt in ./output with content hello world"
